@@ -1,0 +1,6 @@
+@SyncPointBack_HostAddress = http://localhost:5146
+
+GET {{SyncPointBack_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
