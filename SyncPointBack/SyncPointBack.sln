@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34616.47
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPointBack", "SyncPointBack.csproj", "{9BEC0E0E-7BC5-4BB4-A72F-1E2BCE327830}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyncPointBack", "SyncPointBack.csproj", "{9BEC0E0E-7BC5-4BB4-A72F-1E2BCE327830}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPointBackTest", "test\SyncPointBackTest\SyncPointBackTest.csproj", "{DB1DDFB1-B156-4F0B-89E0-6FE7AD8D2F08}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9BEC0E0E-7BC5-4BB4-A72F-1E2BCE327830}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BEC0E0E-7BC5-4BB4-A72F-1E2BCE327830}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BEC0E0E-7BC5-4BB4-A72F-1E2BCE327830}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB1DDFB1-B156-4F0B-89E0-6FE7AD8D2F08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB1DDFB1-B156-4F0B-89E0-6FE7AD8D2F08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB1DDFB1-B156-4F0B-89E0-6FE7AD8D2F08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1DDFB1-B156-4F0B-89E0-6FE7AD8D2F08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
