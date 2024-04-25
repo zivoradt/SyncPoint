@@ -1,55 +1,48 @@
-﻿namespace SyncPointBack.Model.Excel
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+namespace SyncPointBack.Model.Excel
 {
     public class ExcelRecord
     {
+        [Key]
         public int Id { get; set; }
 
         public string UserId { get; set; }
 
+        [Required]
         public DateTime StartDate { get; set; }
 
+        [Required]
         public DateTime EndDate { get; set; }
 
+        [Required]
         public string TicketId { get; set; }
 
-        public int StaticPageCreationId { get; set; }
+        public StaticPageCreation? StaticPageCreation { get; set; }
 
-        public StaticPageCreation StaticPageCreation { get; set; }
+        public StaticPageModification? StaticPageModification { get; set; }
 
-        public int StaticPageModictionId { get; set; }
+        public PDRegistration? PDRegistration { get; set; }
 
-        public StaticPageModification StaticPageModification { get; set; }
+        public PDModification? PDModification { get; set; }
 
-        public int PDRegistrationId { get; set; }
+        public PIM? PIM { get; set; }
+        public GNB? GNB { get; set; }
 
-        public PDRegistration PDRegistration { get; set; }
-
-        public int PDModificationId { get; set; }
-
-        public PDModification PDModification { get; set; }
-
-        public int PIMId { get; set; }
-
-        public PIM PIM { get; set; }
-
-        public int GNBId { get; set; }
-
-        public GNB GNB { get; set; }
-
-        public string Other { get; set; }
-
-        public int NumOfPages { get; set; }
-
-        public int NumOfChanges { get; set; }
-
-        public string Description { get; set; }
-
+        public string? Other { get; set; }
+        public int? NumOfPages { get; set; }
+        public int? NumOfChanges { get; set; }
+        public string? Description { get; set; }
         public DateTime ProductionTime { get; set; }
     }
 
     public class StaticPageCreation
     {
         public int Id { get; set; }
+
+        public ExcelRecord ExcelRecord { get; set; }
 
         public int ExcelRecordId { get; set; }
 
@@ -60,6 +53,8 @@
     {
         public int Id { get; set; }
 
+        public ExcelRecord ExcelRecord { get; set; }
+
         public int ExcelRecordId { get; set; }
 
         public List<StaticPageModificationList> staticPageModification { get; set; } = new List<StaticPageModificationList>();
@@ -69,33 +64,41 @@
     {
         public int Id { get; set; }
 
+        public ExcelRecord ExcelRecord { get; set; }
+
         public int ExcelRecordId { get; set; }
 
-        public List<PDRegistrationList> staticRegistration { get; set; } = new List<PDRegistrationList>();
+        public List<PDRegistrationList> pdRegistration { get; set; } = new List<PDRegistrationList>();
     }
 
     public class PDModification
     {
         public int Id { get; set; }
 
+        public ExcelRecord ExcelRecord { get; set; }
+
         public int ExcelRecordId { get; set; }
 
-        public List<PDModificationList> staticRegistration { get; set; } = new List<PDModificationList>();
+        public List<PDModificationList> pdMOdification { get; set; } = new List<PDModificationList>();
     }
 
     public class PIM
     {
         public int Id { get; set; }
+        public ExcelRecord ExcelRecord { get; set; }
+
         public int ExcelRecordId { get; set; }
 
-        public List<PIMList> staticRegistration { get; set; } = new List<PIMList>();
+        public List<PIMList> pim { get; set; } = new List<PIMList>();
     }
 
     public class GNB
     {
         public int Id { get; set; }
-        public int ExcelRecordId { get; set; }
 
-        public List<GNBList> staticRegistration { get; set; } = new List<GNBList>();
+        public int ExcelRecordId { get; set; }
+        public ExcelRecord ExcelRecord { get; set; }
+
+        public List<GNBList> gnb { get; set; } = new List<GNBList>();
     }
 }

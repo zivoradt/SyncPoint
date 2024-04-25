@@ -1,6 +1,8 @@
+using FluentAssertions.Common;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
+using SyncPointBack.Persistance;
 using SyncPointBack.Services;
-using SyncPointBack.Services.ExcelInitiation;
 using SyncPointBack.Utils.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,17 +10,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.ConfigureService();
+builder.Services.AddDbContext<SyncPointDb>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Added Serilog
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
 
-//Added Serilog
+await app.UseDatabaseConnection();
+
 app.UseRouting();
+
 // Configure the HTTP request pipeline.
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();

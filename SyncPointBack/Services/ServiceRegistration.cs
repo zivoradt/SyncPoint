@@ -1,19 +1,24 @@
-﻿using SyncPointBack.Services.Excel;
-using SyncPointBack.Services.ExcelInitiation;
+﻿using Microsoft.EntityFrameworkCore;
+using SyncPointBack.Persistance;
+using SyncPointBack.Services.Excel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using SyncPointBack.DTO.Mapper;
 
 namespace SyncPointBack.Services
 {
     public static class ServiceRegistration
     {
-        public static IServiceCollection ConfigureService(this IServiceCollection service)
+        public static IServiceCollection ConfigureService(this IServiceCollection services)
         {
-            service.AddControllers();
-            service.AddScoped<IExcelService, ExcelService>();
-            service.AddScoped<ExcelApp>();
-            service.AddEndpointsApiExplorer();
-            service.AddSwaggerGen();
+            services.AddControllers();
+            services.AddAutoMapper(typeof(MapperExcelRecord));
+            services.AddScoped<IExcelService, ExcelService>();
 
-            return service;
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+
+            return services;
         }
     }
 }

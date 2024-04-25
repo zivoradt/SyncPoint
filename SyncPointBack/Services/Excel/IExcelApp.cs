@@ -1,12 +1,8 @@
-﻿using Microsoft.Office.Interop.Excel;
-
-namespace SyncPointBack.Services.Excel
+﻿namespace SyncPointBack.Services.Excel
 {
-    public abstract class IExcelApp
+    public interface IExcelApp
     {
-        protected Application _xapp;
-
-        public void DownloadExcel()
+        void DownloadExcel()
         { }
     }
 }

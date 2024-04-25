@@ -1,14 +1,37 @@
-﻿version: '3.8'
+﻿version: '3.4'
+
+networks:
+  syncpoint-network:
 
 services:
   syncpointback:
-    image: syncpointback:latest
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "8000:8080"
+    depends_on:
+      - syncpointdb
     environment:
-      ASPNETCORE_ENVIRONMENT: Docker
-      
+      - DB_HOST=syncpointdb
+      - DB_NAME=syncpointdb
+      - DB_SA_PASSWORD=Password@123
+      - ASPNETCORE_ENVIRONMENT=Docker
+    networks:
+      - syncpoint-network
+
+  syncpointdb:
+    container_name: syncpointdb
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - "8002:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password@123
+    volumes:
+      - sql-data:/var/opt/mssql
+    networks:
+      - syncpoint-network
+
+volumes:
+  sql-data:
