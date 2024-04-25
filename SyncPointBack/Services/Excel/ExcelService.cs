@@ -1,17 +1,13 @@
 ﻿using SyncPointBack.Model.Excel;
-using SyncPointBack.Services.ExcelInitiation;
 
 namespace SyncPointBack.Services.Excel
 {
     public class ExcelService : IExcelService
     {
-        private ExcelApp _excelStart;
-
         private readonly ILogger<ExcelService> _logger;
 
-        public ExcelService(ExcelApp excelStart, ILogger<ExcelService> logger)
+        public ExcelService(ILogger<ExcelService> logger)
         {
-            _excelStart = excelStart;
             _logger = logger;
         }
 

@@ -1,7 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using SyncPointBack.DTO;
 using SyncPointBack.Model.Excel;
+using SyncPointBack.Persistance;
 using SyncPointBack.Services.Excel;
+using System;
+using System.Threading.Tasks;
 
 namespace SyncPointBack.Controllers
 {
@@ -10,19 +16,23 @@ namespace SyncPointBack.Controllers
     public class ExcelController : ControllerBase
     {
         private readonly ILogger<ExcelController> _logger;
-
         private readonly IExcelService _excelService;
+        private readonly SyncPointDb _syncPointDb;
+        private readonly IMapper _mapper;
 
-        public ExcelController(ILogger<ExcelController> logger, IExcelService excelService)
+        public ExcelController(ILogger<ExcelController> logger, IExcelService excelService, SyncPointDb db, IMapper mapper)
         {
             _logger = logger;
             _excelService = excelService;
+            _syncPointDb = db;
+            _mapper = mapper;
         }
 
         [HttpPost]
-        public IActionResult AddRecord([FromBody()] Record recordEx)
+        public async Task<IActionResult> AddRecord([FromBody] CreateExcelRecordDto recordEx)
         {
-            _logger.LogInformation("Pin Controller");
+            ExcelRecord record = _mapper.Map<ExcelRecord>(recordEx);
+            _logger.LogInformation("Excel Controller - AddRecord");
             if (recordEx == null)
             {
                 return BadRequest("Invalid record data");
@@ -30,9 +40,11 @@ namespace SyncPointBack.Controllers
 
             try
             {
-                Record record = _excelService.AddRecord(recordEx);
+                // Add the Excel record to the database asynchronously
+                _syncPointDb.ExcelRecords.Add(record);
+                await _syncPointDb.SaveChangesAsync();
 
-                return Ok(record);
+                return Ok(recordEx);
             }
             catch (Exception ex)
             {
