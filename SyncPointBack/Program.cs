@@ -1,6 +1,6 @@
-using FluentAssertions.Common;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using SyncPointBack.Helper.ErrorHandler;
 using SyncPointBack.Persistance;
 using SyncPointBack.Services;
 using SyncPointBack.Utils.Logging;
@@ -17,6 +17,12 @@ builder.Services.AddDbContext<SyncPointDb>(options =>
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
+builder.Services.AddControllers();
+
+//Added Global Error Handler
+builder.Services.AddExceptionHandler<GlobalErrorHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 await app.UseDatabaseConnection();
@@ -29,11 +35,16 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseExceptionHandler();
 }
+
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllers(); // Map controllers
+    endpoints.MapControllers();
 });
+
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 app.UseMiddleware<RequestLogContextMiddleware>();

@@ -2,10 +2,12 @@
 
 namespace SyncPointBack.DTO
 {
-    public class CreateExcelRecordDto
+    public interface ExcelRecordDto
     {
-        public string UserId { get; set; }
+    }
 
+    public class CreateExcelRecordDto : ExcelRecordDto
+    {
         public DateTime StartDate { get; set; }
 
         public DateTime EndDate { get; set; }

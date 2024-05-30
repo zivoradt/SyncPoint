@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SyncPointBack.Model.Excel;
+using SyncPointBack.Persistance.Interface;
 using System.Data.Common;
 
 namespace SyncPointBack.Persistance
@@ -36,6 +37,51 @@ namespace SyncPointBack.Persistance
         public DbSet<PIM> PIM { get; set; }
 
         public DbSet<GNB> GNB { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<StaticPageCreation>()
+               .HasOne(s => s.ExcelRecord)
+               .WithOne(e => e.StaticPageCreation)
+               .HasForeignKey<StaticPageCreation>(s => s.ExcelRecordId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StaticPageModification>()
+                    .HasOne(s => s.ExcelRecord)
+                    .WithOne(e => e.StaticPageModification)
+                    .HasForeignKey<StaticPageModification>(s => s.ExcelRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure cascading delete for PDRegistration
+            modelBuilder.Entity<PDRegistration>()
+                .HasOne(p => p.ExcelRecord)
+                .WithOne(e => e.PDRegistration)
+                .HasForeignKey<PDRegistration>(p => p.ExcelRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure cascading delete for PDModification
+            modelBuilder.Entity<PDModification>()
+                .HasOne(p => p.ExcelRecord)
+                .WithOne(e => e.PDModification)
+                .HasForeignKey<PDModification>(p => p.ExcelRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure cascading delete for PIM
+            modelBuilder.Entity<PIM>()
+                .HasOne(p => p.ExcelRecord)
+                .WithOne(e => e.PIM)
+                .HasForeignKey<PIM>(p => p.ExcelRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure cascading delete for GNB
+            modelBuilder.Entity<GNB>()
+                .HasOne(g => g.ExcelRecord)
+                .WithOne(e => e.GNB)
+                .HasForeignKey<GNB>(g => g.ExcelRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            base.OnModelCreating(modelBuilder);
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
