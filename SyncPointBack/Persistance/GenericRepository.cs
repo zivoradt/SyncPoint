@@ -19,7 +19,7 @@ namespace SyncPointBack.Persistance
         public virtual IEnumerable<TEntity> Get(
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-            string includeProperties = "")
+            string[]? includeProperties = null)
         {
             IQueryable<TEntity> query = _dbset;
 
@@ -28,9 +28,12 @@ namespace SyncPointBack.Persistance
                 query = query.Where(filter);
             }
 
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            if (includeProperties != null)
             {
-                query.Include(includeProperty);
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
             }
 
             if (orderBy != null)
@@ -39,6 +42,7 @@ namespace SyncPointBack.Persistance
             }
             else
             {
+                query = query.Take(25);
                 return query.ToList();
             }
         }

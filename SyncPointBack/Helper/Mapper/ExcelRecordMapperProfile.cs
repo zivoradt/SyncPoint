@@ -21,6 +21,8 @@ namespace SyncPointBack.Helper.Mapper
             CreateMap<GNBDto, GNB>();
 
             CreateMap<CreateExcelRecordDto, ExcelRecord>();
+
+            CreateMap<ExcelRecordToClientDto, ExcelRecord>();
         }
     }
 }
