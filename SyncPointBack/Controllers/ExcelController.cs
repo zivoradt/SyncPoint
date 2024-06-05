@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ExcelDownload.Interface;
 using Microsoft.AspNetCore.Mvc;
 using SyncPointBack.DTO;
 using SyncPointBack.Helper.ErrorHandler.CustomException;
@@ -44,7 +45,7 @@ namespace SyncPointBack.Controllers
             return Ok(recordEx);
         }
 
-        [HttpGet("MontlyRecords")]
+        [HttpGet]
         public async Task<IActionResult> GetRecordsFromCurrentMonth()
         {
             try
@@ -80,7 +81,26 @@ namespace SyncPointBack.Controllers
             }
         }
 
-        [HttpGet("GetRecordByID/{clientId}")]
+        [HttpGet("DownloadExcel")]
+        public async Task<IActionResult> DownloadExel()
+        {
+            try
+            {
+                MemoryStream stream = await _excelService.DownloadExcel();
+
+                stream.Position = 0;
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TestExcel");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request. Please try again later.");
+            }
+        }
+
+        [HttpGet("{clientId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExcelRecordToClientDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetRecordFromClientId(string clientId)
@@ -97,7 +117,7 @@ namespace SyncPointBack.Controllers
             return Ok(excelRecod);
         }
 
-        [HttpDelete("Delete/{RecordId}")]
+        [HttpDelete("{RecordId}")]
         public async Task<IActionResult> DeleteRecord(int RecordId)
         {
             _logger.LogInformation("Trying to delete Record");
