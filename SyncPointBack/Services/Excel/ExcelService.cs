@@ -10,6 +10,7 @@ using SyncPointBack.Persistance.Interface;
 using SyncPointBack.Utils;
 using System.Linq.Expressions;
 using Xunit;
+using ExcelDownload.Interface;
 
 namespace SyncPointBack.Services.Excel
 {
@@ -18,12 +19,14 @@ namespace SyncPointBack.Services.Excel
         private readonly ILogger<ExcelService> _logger;
         private UnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IExcelDownload _excelDownload;
 
-        public ExcelService(ILogger<ExcelService> logger, UnitOfWork unitOfWork, IMapper mapper)
+        public ExcelService(ILogger<ExcelService> logger, UnitOfWork unitOfWork, IMapper mapper, IExcelDownload excelDownload)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _excelDownload = excelDownload;
         }
 
         public async Task<ExcelRecord> AddRecord(ExcelRecord recordEx)
@@ -48,6 +51,31 @@ namespace SyncPointBack.Services.Excel
             }
         }
 
+        public async Task<MemoryStream> DownloadExcel()
+        {
+            try
+            {
+                IEnumerable<ExcelRecord> excelRecords = await GetAllRecordsFromThisMonth();
+
+                // Generate the Excel file
+                MemoryStream stream = _excelDownload.GenerateExcelFile("TestExcel", excelRecords, IncludeEntities);
+
+                return stream;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+
+                throw;
+            }
+        }
+
         public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth()
         {
             DateTime currentDate = DateTime.Today;
@@ -58,7 +86,7 @@ namespace SyncPointBack.Services.Excel
             {
                 _logger.LogInformation("Searching DB for records");
 
-                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth).OrderBy(x => x.TicketId).ToList();
+                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
 
                 if (!excelRecords.Any())
                 {
@@ -104,7 +132,9 @@ namespace SyncPointBack.Services.Excel
         {
             _logger.LogInformation("Trying to get Excel Recod by client ID");
 
-            IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.UserId == clientId, includeProperties: IncludeEntities).OrderBy(x => x.TicketId).ToList();
+            string[] includeHeaders = IncludeEntities.ToArray();
+
+            IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.UserId == clientId, includeProperties: includeHeaders).OrderBy(x => x.TicketId).ToList();
 
             if (!excelRecords.Any())
             {

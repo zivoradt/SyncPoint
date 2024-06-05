@@ -5,7 +5,7 @@ using SyncPointBack.Persistance.Interface;
 
 namespace SyncPointBack.Persistance
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly SyncPointDb _dbContext;
 
@@ -35,8 +35,6 @@ namespace SyncPointBack.Persistance
             await _dbContext.SaveChangesAsync();
         }
 
-       
-
         public void Dispose()
         {
             Dispose(true);
@@ -54,7 +52,5 @@ namespace SyncPointBack.Persistance
                 disposed = true;
             }
         }
-
-        
     }
 }

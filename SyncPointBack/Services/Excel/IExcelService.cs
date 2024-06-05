@@ -6,7 +6,13 @@ namespace SyncPointBack.Services.Excel
     public abstract class ExcelServiceBase
     {
         protected readonly int DefaultMonth = DateTime.Now.Month;
-        protected static readonly string[] IncludeEntities = { "PIM", "StaticPageCreation", "StaticPageModification", "PDRegistration", "PDModification", "PIM", "GNB" };
+
+        protected readonly string[] Entities = { "PIM", "StaticPageCreation", "StaticPageModification", "PDRegistration", "PDModification", "PIM", "GNB" };
+
+        public readonly IEnumerable<string> IncludeEntities = new List<string>
+    {
+        "Date", "Start Time", "Ticket ID", "StaticPageCreation", "StaticPageModification", "PDRegistration", "PDModification", "PIM", "GNB", "Other", "No. of changes", "Description", "Finish Time", "Production Time"
+    };
     }
 
     public interface IExcelService
@@ -18,6 +24,8 @@ namespace SyncPointBack.Services.Excel
         public Task<IEnumerable<ExcelRecordToClientDto>> GetTodayRecords();
 
         Task DeleteExcelRecord(int id);
+
+        Task<MemoryStream> DownloadExcel();
 
         Task<bool> isExist(int TicketID);
 
