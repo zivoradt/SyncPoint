@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyncPointBack.Persistance;
 
@@ -11,9 +12,11 @@ using SyncPointBack.Persistance;
 namespace SyncPointBack.Migrations
 {
     [DbContext(typeof(SyncPointDb))]
-    partial class SyncPointDbModelSnapshot : ModelSnapshot
+    [Migration("20240607194911_ProductionTimeChanged")]
+    partial class ProductionTimeChanged
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

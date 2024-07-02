@@ -33,8 +33,6 @@ namespace SyncPointBack.DTO
         public string? Description { get; set; }
 
         public string? Other { get; set; }
-
-        public DateTime ProductionTime { get; set; }
     }
 
     public class StaticPageCreationDto

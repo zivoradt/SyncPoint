@@ -6,6 +6,19 @@ using System.Data.Common;
 
 namespace SyncPointBack.Persistance
 {
+    public class BaseDatabse
+    {
+        private readonly IConfiguration _configuration;
+
+        private readonly int tryToConnectToDb = 1;
+
+        private int countConnectionAttempts = 0;
+
+        private readonly TimeSpan secondsAfterTryToConnectToDb = TimeSpan.FromSeconds(5);
+
+        private ILogger<SyncPointDb> _logger;
+    }
+
     public class SyncPointDb : DbContext
     {
         private readonly IConfiguration _configuration;
@@ -91,7 +104,6 @@ namespace SyncPointBack.Persistance
         {
             try
             {
-                // Execute a simple SQL query to check database connectivity
                 var _ = await Database.ExecuteSqlRawAsync("SELECT 1");
 
                 if (_ != null)
