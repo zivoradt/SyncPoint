@@ -29,6 +29,6 @@
 
         public string? Other { get; set; }
 
-        public DateTime ProductionTime { get; set; }
+        public double ProductionTime { get; set; }
     }
 }

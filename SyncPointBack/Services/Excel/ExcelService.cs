@@ -9,8 +9,10 @@ using SyncPointBack.Persistance;
 using SyncPointBack.Persistance.Interface;
 using SyncPointBack.Utils;
 using System.Linq.Expressions;
-using Xunit;
 using ExcelDownload.Interface;
+using System.Text.Json.Serialization;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace SyncPointBack.Services.Excel
 {
@@ -27,6 +29,17 @@ namespace SyncPointBack.Services.Excel
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _excelDownload = excelDownload;
+        }
+
+        private string SerializeWithCustomOptions<T>(T obj)
+        {
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve,
+                WriteIndented = true
+            };
+
+            return JsonSerializer.Serialize(obj, options);
         }
 
         public async Task<ExcelRecord> AddRecord(ExcelRecord recordEx)
@@ -57,8 +70,16 @@ namespace SyncPointBack.Services.Excel
             {
                 IEnumerable<ExcelRecord> excelRecords = await GetAllRecordsFromThisMonth();
 
-                // Generate the Excel file
-                MemoryStream stream = _excelDownload.GenerateExcelFile("TestExcel", excelRecords, IncludeEntities);
+                List<ExcelImportDto> excelImportDtos = new List<ExcelImportDto>();
+
+                foreach (ExcelRecord recordEx in excelRecords)
+                {
+                    var record = _mapper.Map<ExcelImportDto>(recordEx);
+
+                    excelImportDtos.Add(record);
+                }
+
+                MemoryStream stream = _excelDownload.GenerateExcelFile("TestExcel", excelImportDtos, IncludeEntities);
 
                 return stream;
             }
@@ -76,7 +97,7 @@ namespace SyncPointBack.Services.Excel
             }
         }
 
-        public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth()
+        public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth(string userId)
         {
             DateTime currentDate = DateTime.Today;
             DateTime firstDayOfMont = new DateTime(currentDate.Year, currentDate.Month, 1);
@@ -86,7 +107,7 @@ namespace SyncPointBack.Services.Excel
             {
                 _logger.LogInformation("Searching DB for records");
 
-                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
+                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth && x.UserId == userId, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
 
                 if (!excelRecords.Any())
                 {

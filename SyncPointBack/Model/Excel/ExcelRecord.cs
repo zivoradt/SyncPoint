@@ -35,7 +35,8 @@ namespace SyncPointBack.Model.Excel
         public int? NumOfPages { get; set; }
         public int? NumOfChanges { get; set; }
         public string? Description { get; set; }
-        public DateTime ProductionTime { get; set; }
+
+        public double ProductionTime { get; set; }
     }
 
     public class StaticPageCreation

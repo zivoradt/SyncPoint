@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using ExcelDownload.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SyncPointBack.DTO;
 using SyncPointBack.Helper.ErrorHandler.CustomException;
+using SyncPointBack.Helper.JWTMiddleware;
 using SyncPointBack.Model.Excel;
 using SyncPointBack.Persistance;
 using SyncPointBack.Services.Excel;
+using System.Security.Claims;
 
 namespace SyncPointBack.Controllers
 {
@@ -24,6 +27,7 @@ namespace SyncPointBack.Controllers
             _mapper = mapper;
         }
 
+        [Authorize("User")]
         [HttpPost]
         public async Task<IActionResult> AddRecord([FromBody] CreateExcelRecordDto recordEx)
         {
@@ -45,12 +49,20 @@ namespace SyncPointBack.Controllers
             return Ok(recordEx);
         }
 
+        [Authorize(Roles = "User")]
         [HttpGet]
         public async Task<IActionResult> GetRecordsFromCurrentMonth()
         {
+            var userId = User.GetUserId();
+
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+
             try
             {
-                var currentMonthRecords = await _excelService.GetAllRecordsFromThisMonth();
+                var currentMonthRecords = await _excelService.GetAllRecordsFromThisMonth(userId!);
 
                 return Ok(currentMonthRecords);
             }

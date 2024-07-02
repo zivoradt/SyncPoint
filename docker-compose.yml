@@ -1,0 +1,33 @@
+version: '3.4'
+
+networks:
+  web-api-network:
+
+services:
+  webapi:
+    container_name: web-api
+    image: ${DOCKER_REGISTRY-}webapi
+    build:
+      context: .
+      dockerfile: WebApi/Dockerfile
+    ports:
+       - 8001:80
+    depends_on:
+      - persistancedb  
+    environment:
+      - DB_HOST=persistancedb
+      - DB_NAME=persistancedb
+      - DB_SA_PASSWORD=Password@123
+    networks:
+      - web-api-network
+
+  persistancedb:  
+    container_name: persistancedb
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+       - 8002:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password@123
+    networks:
+      - web-api-network
