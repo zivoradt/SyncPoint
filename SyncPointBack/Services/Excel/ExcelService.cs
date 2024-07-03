@@ -97,7 +97,7 @@ namespace SyncPointBack.Services.Excel
             }
         }
 
-        public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth(string userId)
+        public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth()
         {
             DateTime currentDate = DateTime.Today;
             DateTime firstDayOfMont = new DateTime(currentDate.Year, currentDate.Month, 1);
@@ -107,7 +107,7 @@ namespace SyncPointBack.Services.Excel
             {
                 _logger.LogInformation("Searching DB for records");
 
-                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth && x.UserId == userId, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
+                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
 
                 if (!excelRecords.Any())
                 {

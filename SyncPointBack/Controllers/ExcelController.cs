@@ -62,7 +62,7 @@ namespace SyncPointBack.Controllers
 
             try
             {
-                var currentMonthRecords = await _excelService.GetAllRecordsFromThisMonth(userId!);
+                var currentMonthRecords = await _excelService.GetAllRecordsFromThisMonth();
 
                 return Ok(currentMonthRecords);
             }
