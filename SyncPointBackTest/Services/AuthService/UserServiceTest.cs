@@ -14,6 +14,12 @@ using Xunit;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using SyncPointBack.Auth.Requests;
 using SyncPointBackTest.MockingProvider;
+using SyncPointBack.Model.Excel;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace SyncPointBackTest.Services.AuthService
 {
@@ -22,33 +28,38 @@ namespace SyncPointBackTest.Services.AuthService
         private UserService _userService;
         private IOptions<AppSettings> _fakeAppSettings;
         private UnitOfWork _fakeUnitOfWork;
+        private SyncPointDb _fakeSyncPointDb;
+        private AuthDbContext _fakeAuthDbContext;
         private ILogger<UserService> _fakeLogger;
         private UserManager<ApplicationUser> _fakeUserManager;
+        private readonly ITestOutputHelper _output;
 
-        public UserServiceTest()
+        public UserServiceTest(ITestOutputHelper output)
         {
-            var fakeSyncPointDb = DatabaseFactory.CreateSyncDbContext(true);
-
-            var fakeAuthDbContext = DatabaseFactory.CreateAuthDbContext();
+            _output = output;
+            PopulateDatabase();
 
             // Create UnitOfWork instance
-            _fakeUnitOfWork = new UnitOfWork(fakeSyncPointDb, fakeAuthDbContext);
+            _fakeUnitOfWork = new UnitOfWork(_fakeSyncPointDb, _fakeAuthDbContext);
 
             // Mocking other dependencies
             _fakeLogger = A.Fake<ILogger<UserService>>();
 
             // Mocking UserManager
-            _fakeUserManager = UserManagerFactory.CreateUserManager();
+            _fakeUserManager = UserManagerFactory.CreateUserManager(_fakeAuthDbContext);
 
             var appSettings = new AppSettings { Secret = "test_secret" }; // Adjust as per your AppSettings structure
             _fakeAppSettings = Options.Create(appSettings);
 
-            // Set up UserManager behavior
-            A.CallTo(() => _fakeUserManager.CreateAsync(A<ApplicationUser>._, A<string>._))
-                .Returns(Task.FromResult(IdentityResult.Success));
-
             // Create UserService instance
             _userService = new UserService(_fakeAppSettings, _fakeUnitOfWork, _fakeLogger, _fakeUserManager);
+        }
+
+        private async Task PopulateDatabase()
+        {
+            _fakeSyncPointDb = await DatabaseFactory.CreateSyncDbContext(true);
+
+            _fakeAuthDbContext = await DatabaseFactory.CreateAuthDbContext(true);
         }
 
         [Fact]
@@ -74,19 +85,15 @@ namespace SyncPointBackTest.Services.AuthService
         public async Task GetApplicationUserByEmail_ReturnsUser_WhenFound()
         {
             // Arrange: Create a test email
-            var email = "test@example.com";
-            var userToReturn = new ApplicationUser { Id = "1", Email = email };
-
-            // Mock UserManager behavior for FindByEmailAsync
-            A.CallTo(() => _fakeUserManager.FindByEmailAsync(email))
-                .Returns(Task.FromResult(userToReturn));
+            var email = "test@gmail.com";
+            var userToReturn = new ApplicationUser { Email = email };
 
             // Act: Call the method under test
             var result = await _userService.GetApplicationUserByEmail(email);
 
             // Assert: Verify the returned user matches the expected user
             Assert.NotNull(result);
-            Assert.Equal(userToReturn.Id, result.Id);
+            Assert.Equal(userToReturn.Email, result.Email);
             Assert.Equal(email, result.Email);
         }
 
@@ -119,6 +126,22 @@ namespace SyncPointBackTest.Services.AuthService
             var result = await _userService.CheckIfPasswordIsValid(user, password);
 
             Assert.True(result);
+        }
+
+        [Fact]
+        public async Task ShouldFIndUser()
+        {
+            var userId = 1;
+            // Log information about records
+            var records = await _fakeSyncPointDb.ExcelRecords.ToListAsync();
+
+            // Act
+            var record = await _fakeSyncPointDb.ExcelRecords.FirstOrDefaultAsync(r => r.StaticPageModification.ExcelRecordId == userId);
+
+            _output.WriteLine($"ST: {record.StaticPageModification.ExcelRecordId}");
+            // Assert
+            Assert.NotNull(record);
+            Assert.Equal(userId, record.StaticPageModification.ExcelRecordId);
         }
     }
 }
