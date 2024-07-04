@@ -64,7 +64,7 @@ namespace SyncPointBack.Services.AuthService
 
         public async Task<ApplicationUser> GetApplicationUserByEmail(string email)
         {
-            ApplicationUser user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(r => r.Email == email);
 
             return user;
         }

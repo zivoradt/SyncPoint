@@ -1,7 +1,9 @@
 ﻿using FakeItEasy;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SyncPointBack.Auth.Users;
+using SyncPointBack.Persistance;
 using System;
 using System.Collections.Generic;
 
@@ -9,9 +11,9 @@ namespace SyncPointBackTest.MockingProvider
 {
     public static class UserManagerFactory
     {
-        public static UserManager<ApplicationUser> CreateUserManager()
+        public static UserManager<ApplicationUser> CreateUserManager(AuthDbContext context)
         {
-            var fakeUserStore = A.Fake<IUserStore<ApplicationUser>>();
+            var fakeUserStore = new UserStore<ApplicationUser>(context);
             var fakePasswordHasher = A.Fake<IPasswordHasher<ApplicationUser>>();
             var fakeUserValidators = new List<IUserValidator<ApplicationUser>> { A.Fake<IUserValidator<ApplicationUser>>() };
             var fakePasswordValidators = new List<IPasswordValidator<ApplicationUser>> { A.Fake<IPasswordValidator<ApplicationUser>>() };
