@@ -13,6 +13,7 @@ using ExcelDownload.Interface;
 using System.Text.Json.Serialization;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Collections.Generic;
 
 namespace SyncPointBack.Services.Excel
 {
@@ -60,6 +61,8 @@ namespace SyncPointBack.Services.Excel
             }
             catch (Exception ex)
             {
+                _logger.LogError("ExcelService: Error adding record", ex);
+
                 throw ex;
             }
         }
@@ -68,16 +71,9 @@ namespace SyncPointBack.Services.Excel
         {
             try
             {
-                IEnumerable<ExcelRecord> excelRecords = await GetAllRecordsFromThisMonth();
+                List<ExcelRecordToClientDto> excelRecords = await GetAllRecordsFromThisMonth();
 
-                List<ExcelImportDto> excelImportDtos = new List<ExcelImportDto>();
-
-                foreach (ExcelRecord recordEx in excelRecords)
-                {
-                    var record = _mapper.Map<ExcelImportDto>(recordEx);
-
-                    excelImportDtos.Add(record);
-                }
+                List<ExcelImportDto> excelImportDtos = _mapper.Map<List<ExcelImportDto>>(excelRecords);
 
                 MemoryStream stream = _excelDownload.GenerateExcelFile("TestExcel", excelImportDtos, IncludeEntities);
 
@@ -97,7 +93,7 @@ namespace SyncPointBack.Services.Excel
             }
         }
 
-        public async Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth()
+        public async Task<List<ExcelRecordToClientDto>> GetAllRecordsFromThisMonth()
         {
             DateTime currentDate = DateTime.Today;
             DateTime firstDayOfMont = new DateTime(currentDate.Year, currentDate.Month, 1);
@@ -109,15 +105,14 @@ namespace SyncPointBack.Services.Excel
 
                 IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.EndDate >= firstDayOfMont && x.EndDate <= lastDayOfMonth, includeProperties: Entities).OrderBy(x => x.TicketId).ToList();
 
-                if (!excelRecords.Any())
-                {
-                    return Enumerable.Empty<ExcelRecord>();
-                }
+                var excelRecordsDto = _mapper.Map<List<ExcelRecordToClientDto>>(excelRecords);
 
-                return excelRecords;
+                return excelRecords.Any() ? excelRecordsDto : null;
             }
             catch (Exception ex)
             {
+                _logger.LogError("Error fetching records from DB", ex);
+
                 throw ex;
             }
         }
@@ -133,45 +128,34 @@ namespace SyncPointBack.Services.Excel
                     return Enumerable.Empty<ExcelRecordToClientDto>();
                 }
 
-                var recordsToClientDtoList = new List<ExcelRecordToClientDto>();
-
-                foreach (var record in records)
-                {
-                    var recordToClient = _mapper.Map<ExcelRecordToClientDto>(record);
-                    recordsToClientDtoList.Add(recordToClient);
-                }
-
-                return recordsToClientDtoList;
+                return _mapper.Map<List<ExcelRecordToClientDto>>(records);
             }
             catch (Exception ex)
             {
+                _logger.LogError("Error getting today's records", ex);
+
                 throw ex;
             }
         }
 
         public async Task<IEnumerable<ExcelRecordToClientDto>> GetByClientId(string clientId)
         {
-            _logger.LogInformation("Trying to get Excel Recod by client ID");
+            _logger.LogInformation("Trying to get Excel Record by client ID");
 
-            string[] includeHeaders = IncludeEntities.ToArray();
-
-            IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository.Get(filter: x => x.UserId == clientId, includeProperties: includeHeaders).OrderBy(x => x.TicketId).ToList();
-
-            if (!excelRecords.Any())
+            try
             {
-                return Enumerable.Empty<ExcelRecordToClientDto>();
+                IEnumerable<ExcelRecord> excelRecords = _unitOfWork.ExcelRepository
+                    .Get(filter: x => x.UserId == clientId, includeProperties: IncludeEntities.ToArray())
+                    .OrderBy(x => x.TicketId)
+                    .ToList();
+
+                return excelRecords.Any() ? _mapper.Map<List<ExcelRecordToClientDto>>(excelRecords) : Enumerable.Empty<ExcelRecordToClientDto>();
             }
-
-            var recordsToClientDtoList = new List<ExcelRecordToClientDto>();
-
-            foreach (var record in excelRecords)
+            catch (Exception ex)
             {
-                var recordToClient = _mapper.Map<ExcelRecordToClientDto>(record);
-
-                recordsToClientDtoList.Add(recordToClient);
+                _logger.LogError($"Error getting records for client ID {clientId}", ex);
+                throw;
             }
-
-            return recordsToClientDtoList;
         }
 
         public async Task<bool> isExist(string UserId)

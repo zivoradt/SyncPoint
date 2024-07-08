@@ -1,0 +1,56 @@
+﻿@page "/login"
+@using SyncPointUI.Services
+@inject AuthService authService
+@inject NavigationManager Navigation
+@inject ILogger<Login> Logger
+
+<h3>Login</h3>
+
+<EditForm Model="authRequest" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" class="form-control" @bind-Value="authRequest.Email" />
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="authRequest.Password" />
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@if (loginError != null)
+{
+    <div class="alert alert-danger">
+        @loginError
+    </div>
+}
+
+@code {
+    private AuthRequest authRequest = new AuthRequest();
+   
+    private string loginError;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var authResponse = await authService.Authenticate(authRequest);
+            if (authResponse.Token != null)
+            {
+                // Save the token to local storage or a more secure place
+                // e.g., localStorage.setItem("authToken", authResponse.Token);
+
+                // Redirect to another page
+                Navigation.NavigateTo("/current-month-records");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Login failed.");
+            loginError = "Login failed. Please check your email and password.";
+        }
+    }
+}

@@ -7,8 +7,6 @@ using SyncPointBack.Utils.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 // Added Excel Related Model Database
 builder.Services.ConfigureService();
 builder.Services.AddDbContext<SyncPointDb>(options =>
@@ -45,11 +43,11 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
     app.UseExceptionHandler();
 }
 
-app.UseExceptionHandler("/error"); // Use custom error handling endpoint for other environments
+app.UseExceptionHandler("/error");
 
 app.UseHttpsRedirection();
 
-app.UseRouting(); // Ensure routing is configured before authorization
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();

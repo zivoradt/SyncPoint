@@ -14,6 +14,12 @@ namespace SyncPointBack.Services.AuthService
 
         Task<bool> CheckIfPasswordIsValid(ApplicationUser user, string password);
 
+        Task<AuthResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest);
+
+        string GenerateRefreshToken();
+
+        Task<bool> UpdateRefreshTokenDetails(ApplicationUser user);
+
         string CreateToken(ApplicationUser user);
     }
 }

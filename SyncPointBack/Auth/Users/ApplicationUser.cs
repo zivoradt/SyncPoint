@@ -13,5 +13,9 @@ namespace SyncPointBack.Auth.Users
         public Role Role { get; set; }
 
         public bool isActive { get; set; }
+
+        public string? RefreshToken { get; set; }
+
+        public DateTime RefreshTokenExpiry { get; set; }
     }
 }

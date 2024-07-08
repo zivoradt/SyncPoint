@@ -1,0 +1,86 @@
+﻿@page "/current-month-records"
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Current Month Records</h3>
+
+@if (records == null)
+{
+    <p>Loading...</p>
+}
+else if (!records.Any())
+{
+    <p>No records found for this month.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>TicketId</th>
+                <th>UserId</th>
+                <th>StartDate</th>
+                <th>EndDate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in records)
+            {
+                <tr>
+                    <td>@record.TicketId</td>
+                    <td>@record.UserId</td>
+                    <td>@record.StartDate</td>
+                    <td>@record.EndDate</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ExcelRecordToClientDto> records;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await GetToken();
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7215/api/Excel/CurrentMonth");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                records = await response.Content.ReadFromJsonAsync<List<ExcelRecordToClientDto>>();
+            }
+            else
+            {
+                // Handle error response
+                Console.WriteLine($"Error: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception: {ex.Message}");
+        }
+    }
+
+    private async Task<string> GetToken()
+    {
+        // Implement logic to retrieve the bearer token
+        // This could be from a login process, local storage, or another method
+        return await Task.FromResult("your-bearer-token");
+    }
+
+    public class ExcelRecordToClientDto
+    {
+        public int TicketId { get; set; }
+        public string UserId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+    }
+}
+
+

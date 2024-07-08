@@ -31,6 +31,6 @@ namespace SyncPointBack.Services.Excel
 
         Task<bool> isExist(string UserID);
 
-        Task<IEnumerable<ExcelRecord>> GetAllRecordsFromThisMonth();
+        Task<List<ExcelRecordToClientDto>> GetAllRecordsFromThisMonth();
     }
 }

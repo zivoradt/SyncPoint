@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyncPointBack", "SyncPointB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDownload", "..\ExcelDownload\ExcelDownload.csproj", "{8474D939-FBF7-4406-8919-1357168708EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPointBackTest", "..\SyncPointBackTest\SyncPointBackTest.csproj", "{875B068F-CEE2-4659-8F9B-F03DAB408CBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyncPointBackTest", "..\SyncPointBackTest\SyncPointBackTest.csproj", "{875B068F-CEE2-4659-8F9B-F03DAB408CBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPointUI", "..\SyncPointUI\SyncPointUI.csproj", "{C5F55E0A-1DBB-4CD4-A664-E931E1789A47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{875B068F-CEE2-4659-8F9B-F03DAB408CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{875B068F-CEE2-4659-8F9B-F03DAB408CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{875B068F-CEE2-4659-8F9B-F03DAB408CBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5F55E0A-1DBB-4CD4-A664-E931E1789A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5F55E0A-1DBB-4CD4-A664-E931E1789A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5F55E0A-1DBB-4CD4-A664-E931E1789A47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5F55E0A-1DBB-4CD4-A664-E931E1789A47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

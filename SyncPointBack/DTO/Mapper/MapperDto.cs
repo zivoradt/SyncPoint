@@ -31,7 +31,7 @@ namespace SyncPointBack.DTO.Mapper
             .ForMember(dest => dest.NumOfChanges, opt => opt.MapFrom(src => src.NumOfChanges))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
             .ForMember(dest => dest.Other, opt => opt.MapFrom(src => src.Other))
-            .ForMember(dest => dest.ProductionTime, opt => opt.MapFrom(src => (src.EndDate - src.StartDate).TotalHours));
+            .ForMember(dest => dest.ProductionTime, opt => opt.MapFrom(src => FormatProductionTime(src)));
 
             // Mapping from ExcelRecordToClientDto to ExcelRecord
             CreateMap<ExcelRecordToClientDto, ExcelRecord>()
@@ -116,6 +116,20 @@ namespace SyncPointBack.DTO.Mapper
             {
                 var timeSpan = source.EndDate - source.StartDate;
                 return string.Format("{0:D2}:{1:D2}", (int)timeSpan.TotalHours, timeSpan.Minutes);
+            }
+        }
+
+        private string FormatProductionTime(ExcelRecord src)
+        {
+            var timeSpan = src.EndDate - src.StartDate;
+
+            if (timeSpan.TotalHours > 0)
+            {
+                return $"{(int)timeSpan.TotalHours}:{timeSpan.Minutes:D2}";
+            }
+            else
+            {
+                return "0:00"; // Default value when there's no valid time span
             }
         }
 
