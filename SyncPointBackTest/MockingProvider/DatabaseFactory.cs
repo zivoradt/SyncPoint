@@ -62,7 +62,7 @@ namespace SyncPointBackTest.MockingProvider
                             StartDate = DateTime.Now,
                             EndDate = DateTime.Now,
                             TicketId = $"{i}",
-                            ProductionTime = 1.0 + i,
+                            ProductionTime = 1,
                             StaticPageCreation = new StaticPageCreation
                             {
                                 staticPageCreation = new List<StaticPageCreationList>

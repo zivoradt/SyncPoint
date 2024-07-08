@@ -1,0 +1,243 @@
+﻿@page "/current-month-records"
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Current Month Records</h3>
+
+@if (records == null)
+{
+    <p>Loading...</p>
+}
+else if (!records.Any())
+{
+    <p>No records found for this month.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Ticket ID</th>
+                <th>Production Time</th>
+                <!-- Add other headers as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in records)
+            {
+                <tr>
+                    
+                    <td>@record.StartDate.ToShortDateString()</td>
+                    <td>@record.EndDate.ToShortDateString()</td>
+                    <td>@record.TicketId</td>
+                    <td>@record.ProductionTime</td>
+                    <!-- Add other cells as needed -->
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ExcelRecordToClientDto> records;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDVoMDk4YmI4cmViZXJid3I0dnZiODk0NSIsImp0aSI6IjcyN2UxZTY4LTVlZmEtNDc1Zi1hM2UyLWI2NjdjNTI5MWVmNSIsImlhdCI6IjE3MjA0MjQ1ODQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6WyIwYjA5ODM1Mi0xZGExLTRmNzItOWRjNS04NDY1ZDkzYjExNzIiLCIwYjA5ODM1Mi0xZGExLTRmNzItOWRjNS04NDY1ZDkzYjExNzIiXSwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6InppbGUxIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjpbInppdm9yYWR0cmlja292aWNAZ21haWwuY29tIiwieml2b3JhZHRyaWNrb3ZpY0BnbWFpbC5jb20iXSwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVXNlciIsImV4cCI6MTcyNTYwODU4NCwiaXNzIjoiRXhhbXBsZUlzc3VlciIsImF1ZCI6IlZhbGlkQXVkaWVuY2UifQ.3P0NqatFML0QFZ6zlxR0z9WxRCvfuqLtCfxf7PjVnVw";
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7215/api/Excel/CurrentMonth");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(json);
+                var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters =
+                    {
+                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                    }
+                    };
+                records = JsonSerializer.Deserialize<List<ExcelRecordToClientDto>>(json, options);
+            }
+            else
+            {
+                // Handle error response
+                Console.WriteLine($"Error: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception: {ex.Message}");
+        }
+    }
+
+    
+
+    public class ExcelRecordToClientDto
+    {
+        public string RecordID { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
+
+        public string TicketId { get; set; }
+
+        public StaticPageCreationDto? StaticPageCreation { get; set; }
+
+        public StaticPageModificationDto? StaticPageModification { get; set; }
+
+        public PDRegistrationDto? PDRegistration { get; set; }
+
+        public PDModificationDto? PDModification { get; set; }
+
+        public PIMDto? PIM { get; set; }
+
+        public GNBDto? GNB { get; set; }
+
+        public int? NumOfPages { get; set; }
+
+        public int? NumOfChanges { get; set; }
+
+        public string? Description { get; set; }
+
+        public string? Other { get; set; }
+
+        public string ProductionTime { get; set; }
+    }
+
+    public class StaticPageCreationDto
+    {
+        public List<StaticPageCreationListDto> StaticPageCreation { get; set; } = new List<StaticPageCreationListDto>();
+    }
+
+    public class StaticPageModificationDto
+    {
+        public List<StaticPageModificationListDto> StaticPageModification { get; set; } = new List<StaticPageModificationListDto>();
+    }
+
+    public class PDRegistrationDto
+    {
+        public List<PDRegistrationListDto> PDRegistration { get; set; } = new List<PDRegistrationListDto>();
+    }
+
+    public class PDModificationDto
+    {
+        public List<PDModificationListDto> PDModification { get; set; } = new List<PDModificationListDto>();
+    }
+
+    public class PIMDto
+    {
+        public List<PIMListDto> PIM { get; set; } = new List<PIMListDto>();
+    }
+
+    public class GNBDto
+    {
+        public List<GNBListDto> GNB { get; set; } = new List<GNBListDto>();
+    }
+
+    public enum StaticPageCreationListDto
+    {
+        PageCreation,
+        NewsSection,
+        PushingPageLive,
+        BannerCreation,
+        CtaCreation,
+        CopyCreation,
+        BreadcrumCreation,
+        SEOCreation,
+        ComponentCreation
+    }
+
+    public enum StaticPageModificationListDto
+    {
+        BannerCreation,
+        BannerRemoval,
+        ComponentCreation,
+        ComponentUpdate,
+        CopyUpdate,
+        CTAUpdate,
+        ImageUpdate,
+        LNBUpdate,
+        BreadcrumbUpdate,
+        DisclaimerUpdate,
+        AnchorTab,
+        FooterUpdate,
+        ComponentRemoval
+    }
+
+    public enum PDRegistrationListDto
+    {
+        SKURegistration,
+        OnlineToDoList
+    }
+
+    public enum PDModificationListDto
+    {
+        BannerRemoval,
+        BannerUpdate,
+        DisclaimerUpdate,
+        DPYes,
+        DPNo,
+        FeatureCreation,
+        FatureUpdate,
+        FilterUpdate,
+        FlagUpdate,
+        GalleryUpdate,
+        HiglightSpecUpdate,
+        KeyFeatureUpdate,
+        MSA,
+        OptionMapping,
+        PageRedirection,
+        SEOUpdate,
+        CTAUpdate,
+        AnchorTab,
+        DisplayName
+    }
+
+    public enum PIMListDto
+    {
+        SEOTagManagement,
+        ProductOption,
+        ProductFilter,
+        ProductIA,
+        SpecAttributeManagement,
+        BuyingConfigurator,
+        WerableBC,
+        DesignStudio,
+        HelpMeChoose
+    }
+
+    public enum GNBListDto
+    {
+        CopyUpdate,
+        CTACreation,
+        CTAUpdate,
+        KVUpdate,
+        LinkCreaption,
+        LinkUpdate,
+        MenuCreation,
+        MenuUpdate,
+        PublishingGNBLive,
+        PublishingGNBToQa,
+        DisplayYes,
+        DisplayNo
+    }
+}
+
+
+    
+

@@ -10,6 +10,7 @@ using SyncPointBack.Persistance;
 using SyncPointBack.Persistance.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SyncPointBack.Services.AuthService
@@ -95,7 +96,7 @@ namespace SyncPointBack.Services.AuthService
 
         public string CreateToken(ApplicationUser user)
         {
-            var expiration = DateTime.Now.AddDays(60);
+            var expiration = DateTime.Now.AddSeconds(60);
             var token = CreateJwtToken(CreateClaims(user), CreateSigningCredentials(), expiration);
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -103,6 +104,17 @@ namespace SyncPointBack.Services.AuthService
             _logger.LogInformation("JWT Token created");
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumbers = new byte[64];
+
+            using (var numberGenerator = RandomNumberGenerator.Create())
+            {
+                numberGenerator.GetBytes(randomNumbers);
+            }
+            return Convert.ToBase64String(randomNumbers);
         }
 
         private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials, DateTime expiration)
@@ -120,6 +132,90 @@ namespace SyncPointBack.Services.AuthService
             );
         }
 
+        public async Task<AuthResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest)
+        {
+            var principal = GetTokenPrincipal(refreshTokenRequest.JwtToken);
+
+            var response = new AuthResponse();
+
+            if (principal?.Identity?.Name is null)
+            {
+                return response;
+            }
+
+            var identityUser = await _userManager.FindByNameAsync(principal.Identity.Name);
+
+            if (CheckIfRefreshTokenIsExpire(identityUser, refreshTokenRequest))
+            {
+                return response;
+            }
+
+            response.isLoggedIn = true;
+            response.JwtToken = this.CreateToken(identityUser);
+            response.RefreshToken = this.GenerateRefreshToken();
+
+            identityUser.RefreshToken = response.RefreshToken;
+            identityUser.RefreshTokenExpiry = DateTime.Now.AddSeconds(12);
+
+            bool isUpdated = await this.UpdateRefreshTokenDetails(identityUser);
+
+            if (!isUpdated)
+            {
+                throw new InvalidOperationException("The Refresh token is not updated");
+            }
+
+            return response;
+        }
+
+        public bool CheckIfRefreshTokenIsExpire(ApplicationUser user, RefreshTokenRequest request)
+        {
+            if (user is null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiry > DateTime.Now)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private ClaimsPrincipal? GetTokenPrincipal(string JWT)
+        {
+            var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+            var symmetricSecurityKey = configuration.GetSection("JwtTokenSettings")["SymmetricSecurityKey"];
+            var validIssuer = configuration.GetSection("JwtTokenSettings")["ValidIssuer"];
+            var validAudience = configuration.GetSection("JwtTokenSettings")["ValidAudience"];
+
+            var secureKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(symmetricSecurityKey));
+
+            var validation = new TokenValidationParameters
+            {
+                IssuerSigningKey = secureKey,
+                ValidateLifetime = false,
+                ValidateActor = false,
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidAudience = validAudience,
+                ValidIssuer = validIssuer,
+            };
+
+            var handler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                var principal = handler.ValidateToken(JWT, validation, out var validatedToken);
+                return principal;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateRefreshTokenDetails(ApplicationUser user)
+        {
+            var update = await _userManager.UpdateAsync(user);
+
+            return update.Succeeded ? true : false;
+        }
+
         private List<Claim> CreateClaims(ApplicationUser user)
         {
             var jwtSub = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("JwtTokenSettings")["JwtRegisteredClaimNamesSub"];
@@ -133,7 +229,6 @@ namespace SyncPointBack.Services.AuthService
                     new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(ClaimTypes.Role, user.Role.ToString())

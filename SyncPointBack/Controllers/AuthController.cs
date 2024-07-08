@@ -40,6 +40,18 @@ namespace SyncPointBack.Controllers
             return Ok("User is registered");
         }
 
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequest request)
+        {
+            var loginResult = await _userService.RefreshToken(request);
+
+            if (loginResult.isLoggedIn)
+            {
+                return Ok(loginResult);
+            }
+            return Unauthorized();
+        }
+
         [HttpPost]
         [Route("login")]
         public async Task<ActionResult<AuthResponse>> Authenticate([FromBody] AuthRequest request)
@@ -72,12 +84,27 @@ namespace SyncPointBack.Controllers
 
             var token = _userService.CreateToken(user);
 
+            var refreshToken = _userService.GenerateRefreshToken();
+
+            userDb.RefreshToken = refreshToken;
+            userDb.RefreshTokenExpiry = DateTime.Now.AddMinutes(20);
+
+            if (await _userService.UpdateRefreshTokenDetails(userDb))
+            {
+                _logger.LogInformation("Refresh token updated");
+            }
+            else
+            {
+                throw new InvalidOperationException("Refresh Token operation is failed.");
+            }
+
             return Ok(new AuthResponse
             {
-                Token = token,
+                JwtToken = token,
                 Email = request.Email,
                 Username = userDb.UserName,
-                isActive = userDb.isActive
+                isActive = userDb.isActive,
+                RefreshToken = refreshToken
             });
         }
     }

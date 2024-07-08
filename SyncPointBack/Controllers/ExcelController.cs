@@ -3,10 +3,8 @@ using ExcelDownload.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SyncPointBack.DTO;
-using SyncPointBack.Helper.ErrorHandler.CustomException;
 using SyncPointBack.Helper.JWTMiddleware;
 using SyncPointBack.Model.Excel;
-using SyncPointBack.Persistance;
 using SyncPointBack.Services.Excel;
 using System.Security.Claims;
 
@@ -20,37 +18,39 @@ namespace SyncPointBack.Controllers
         private readonly IExcelService _excelService;
         private readonly IMapper _mapper;
 
-        public ExcelController(ILogger<ExcelController> logger, IExcelService excelService, SyncPointDb db, IMapper mapper)
+        public ExcelController(ILogger<ExcelController> logger, IExcelService excelService, IMapper mapper)
         {
             _logger = logger;
             _excelService = excelService;
             _mapper = mapper;
         }
 
-        [Authorize("User")]
+        private IActionResult HandleError(Exception ex, string customMessage)
+        {
+            _logger.LogError(ex, customMessage);
+            return StatusCode(StatusCodes.Status500InternalServerError, customMessage);
+        }
+
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> AddRecord([FromBody] CreateExcelRecordDto recordEx)
         {
-            ExcelRecord record = _mapper.Map<ExcelRecord>(recordEx);
-
+            var record = _mapper.Map<ExcelRecord>(recordEx);
             _logger.LogInformation("Excel Controller - Trying to AddRecord");
 
             try
             {
                 await _excelService.AddRecord(record);
+                return Ok(recordEx);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-
-                return StatusCode(500, "The record could not be saved to the database. Please try again later.");
+                return HandleError(ex, "The record could not be saved to the database. Please try again later.");
             }
-
-            return Ok(recordEx);
         }
 
         [Authorize(Roles = "User")]
-        [HttpGet]
+        [HttpGet("CurrentMonth")]
         public async Task<IActionResult> GetRecordsFromCurrentMonth()
         {
             var userId = User.GetUserId();
@@ -63,14 +63,11 @@ namespace SyncPointBack.Controllers
             try
             {
                 var currentMonthRecords = await _excelService.GetAllRecordsFromThisMonth();
-
                 return Ok(currentMonthRecords);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
-
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                return HandleError(ex, ex.Message);
             }
         }
 
@@ -82,33 +79,26 @@ namespace SyncPointBack.Controllers
             try
             {
                 var records = await _excelService.GetTodayRecords();
-
                 return Ok(records);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request. Please try again later.");
+                return HandleError(ex, "An error occurred while processing your request. Please try again later.");
             }
         }
 
-        [HttpGet("DownloadExcel")]
-        public async Task<IActionResult> DownloadExel()
+        [HttpGet("DownloadExcelFile")]
+        public async Task<IActionResult> DownloadExcelFile()
         {
             try
             {
-                MemoryStream stream = await _excelService.DownloadExcel();
-
+                var stream = await _excelService.DownloadExcel();
                 stream.Position = 0;
-
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TestExcel");
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TestExcel.xlsx");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request. Please try again later.");
+                return HandleError(ex, "An error occurred while processing your request. Please try again later.");
             }
         }
 
@@ -119,14 +109,21 @@ namespace SyncPointBack.Controllers
         {
             _logger.LogInformation("Getting record from client ID.");
 
-            IEnumerable<ExcelRecordToClientDto> excelRecod = await _excelService.GetByClientId(clientId);
-
-            if (!excelRecod.Any())
+            try
             {
-                return NotFound();
-            }
+                var excelRecords = await _excelService.GetByClientId(clientId);
 
-            return Ok(excelRecod);
+                if (!excelRecords.Any())
+                {
+                    return NotFound();
+                }
+
+                return Ok(excelRecords);
+            }
+            catch (Exception ex)
+            {
+                return HandleError(ex, "An error occurred while processing your request. Please try again later.");
+            }
         }
 
         [HttpDelete("{RecordId}")]
@@ -134,14 +131,20 @@ namespace SyncPointBack.Controllers
         {
             _logger.LogInformation("Trying to delete Record");
 
-            if (!await _excelService.isExist(RecordId))
+            try
             {
-                return NotFound($"Ticket with {RecordId} don't exist.");
+                if (!await _excelService.isExist(RecordId))
+                {
+                    return NotFound($"Ticket with {RecordId} doesn't exist.");
+                }
+
+                await _excelService.DeleteExcelRecord(RecordId);
+                return NoContent();
             }
-
-            await _excelService.DeleteExcelRecord(RecordId);
-
-            return Ok(StatusCodes.Status204NoContent);
+            catch (Exception ex)
+            {
+                return HandleError(ex, "An error occurred while processing your request. Please try again later.");
+            }
         }
     }
 }

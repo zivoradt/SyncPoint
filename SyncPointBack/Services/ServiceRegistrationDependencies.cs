@@ -21,7 +21,7 @@ namespace SyncPointBack.Services
         {
             services.AddControllers().AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 options.JsonSerializerOptions.WriteIndented = true;
             });
@@ -35,7 +35,8 @@ namespace SyncPointBack.Services
                 options.Password.RequireUppercase = false;
             })
                 .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<AuthDbContext>();
+                .AddEntityFrameworkStores<AuthDbContext>()
+                .AddDefaultTokenProviders();
             services.AddAutoMapper(typeof(MapperExcelRecord));
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IExcelDownload, ExcelDownloader>();
